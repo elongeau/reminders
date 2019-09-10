@@ -43,6 +43,7 @@ import           Database.PostgreSQL.Simple.FromRow
 import           Network.Wai
 import           Network.Wai.Handler.Warp
 import           Servant
+import           System.Environment             ( getEnv )
 -- import           Servant.Types.SourceT          ( source )
 
 -- TODO split this module
@@ -103,18 +104,25 @@ app env = serve reminderApi $ hoistServer reminderApi (nt env) server
 instance FromRow Remind where
   fromRow = Remind <$> field <*> field <*> field
 
-mkDbPool :: IO DBPool
-mkDbPool = do
+mkDbPool :: ConnectInfo -> IO DBPool
+mkDbPool connectionInfo = do
   -- TODO use env variable
-  let create = connect defaultConnectInfo { connectHost     = "localhost"
-                                          , connectDatabase = "postgres"
-                                          , connectUser     = "postgres"
-                                          , connectPassword = "password"
-                                          }
+  let create = connect connectionInfo
   createPool create close 1 0.5 1
 
+readConnectionInfo :: IO ConnectInfo
+readConnectionInfo =
+  ConnectInfo
+    <$> getEnv "DB_HOST"
+    <*> (read <$> getEnv "DB_PORT")
+    <*> getEnv "DB_USER"
+    <*> getEnv "DB_PASSWORD"
+    <*> getEnv "DB_DATABASE"
+
+-- TODO add a pre-commit hook for stylish-haskell
 main :: IO ()
 main = do
-  pool <- mkDbPool
+  connectionInfo <- readConnectionInfo
+  pool           <- mkDbPool connectionInfo
   let env = Env { dbPool = pool }
   run 8080 (app env)
