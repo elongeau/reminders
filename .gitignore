@@ -25,4 +25,5 @@ cabal.project.local~
 .HTF/
 .ghc.environment.*
 
+.envrc
 # End of https://www.gitignore.io/api/haskell,stack
