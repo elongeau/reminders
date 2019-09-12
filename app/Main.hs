@@ -13,6 +13,8 @@
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeApplications           #-}
 {-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE InstanceSigs              #-}
+{-# LANGUAGE PatternSynonyms #-}
 
 -- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Server where
@@ -21,7 +23,7 @@ module Server where
 -- import           Control.Monad.Except
 -- import           Control.Monad.Reader
 import           Data.Aeson
-
+import Data.Text
 -- import Control.Monad.IO.Class (liftIO)
 -- import qualified Data.Aeson.Parser
 -- import           Data.Aeson.Types
@@ -44,7 +46,8 @@ import           Network.Wai
 import           Network.Wai.Handler.Warp
 import           Servant
 import           System.Environment             ( getEnv )
--- import           Servant.Types.SourceT          ( source )
+import Colog (HasLog (..), LogAction, Message, Msg (..), Severity (..), filterBySeverity, richMessageAction, pattern D, log)
+import GHC.Stack
 
 -- TODO split this module
 
@@ -59,34 +62,52 @@ type ReminderAPI = "reminds" :> Get '[JSON] [Remind]
 
 type DBPool = Pool Connection
 
-newtype Env = Env {
-    dbPool :: DBPool
-    -- TODO add logging
+data Env m = Env {
+    envDBPool :: !DBPool
+    , envLogAction :: !(LogAction m Message)
   }
+type AppEnv = Env App
 
 newtype App a = App
-  { unApp :: ReaderT Env IO a
-  } deriving (Functor, Applicative, Monad, MonadIO, MonadReader Env)
+  { unApp :: ReaderT AppEnv IO a
+  } deriving (Functor, Applicative, Monad, MonadIO, MonadReader AppEnv)
 
 class Has field env where
   obtain :: env -> field
 
-instance Has DBPool Env where
-  obtain = dbPool
+instance Has DBPool AppEnv where
+  obtain = envDBPool
+
+instance Has (LogAction m Message) (Env m) where
+  obtain = envLogAction
+
+instance HasLog (Env m) Message m where
+  getLogAction :: Env m -> LogAction m Message
+  getLogAction = envLogAction
+
+  setLogAction :: LogAction m Message -> Env m -> Env m
+  setLogAction logAction env = env {
+    envLogAction = logAction
+  }
 
 grab :: forall field env m . (MonadReader env m, Has field env) => m field
 grab = asks $ obtain @field
 
 type WithPool env m = (Has DBPool env, MonadReader env m, MonadIO m)
-withPool :: WithPool env m => (Connection -> IO a) -> m a
+
+type WithLog env m = (MonadReader env m, HasLog env Message m, HasCallStack)
+
+withPool :: (WithPool env m, WithLog env m) => (Connection -> IO a) -> m a
 withPool f = do
   pool <- grab @DBPool
   liftIO $ withResource pool f
 
-selectM :: (WithPool env m, FromRow a) => Query -> m [a]
-selectM queryStr = withPool $ \conn -> query_ conn queryStr
+selectM :: (WithPool env m, FromRow a, WithLog env m) => Query -> m [a]
+selectM queryStr = do
+  Colog.log D $ "Run " <> pack (show queryStr)
+  withPool $ \conn -> query_ conn queryStr
 
-getReminds :: WithPool env m => m [Remind]
+getReminds :: (WithPool env m, WithLog env m) => m [Remind]
 getReminds = selectM "SELECT * from reminders"
 
 server :: ServerT ReminderAPI App
@@ -95,10 +116,10 @@ server = getReminds
 reminderApi :: Proxy ReminderAPI
 reminderApi = Proxy
 
-nt :: Env -> App a -> Handler a
+nt :: AppEnv -> App a -> Handler a
 nt env app = liftIO $ runReaderT (unApp app) env
 
-app :: Env -> Application
+app :: AppEnv -> Application
 app env = serve reminderApi $ hoistServer reminderApi (nt env) server
 
 instance FromRow Remind where
@@ -119,10 +140,16 @@ readConnectionInfo =
     <*> getEnv "DB_PASSWORD"
     <*> getEnv "DB_DATABASE"
 
+mainLogAction :: MonadIO m => Severity -> LogAction m Message
+mainLogAction severity = filterBySeverity severity msgSeverity richMessageAction
+
 -- TODO add a pre-commit hook for stylish-haskell
 main :: IO ()
 main = do
   connectionInfo <- readConnectionInfo
   pool           <- mkDbPool connectionInfo
-  let env = Env { dbPool = pool }
+  let env = Env {
+     envDBPool = pool
+      , envLogAction = mainLogAction Debug
+    }
   run 8080 (app env)
