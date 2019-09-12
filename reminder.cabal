@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3d7481faa7500342e854f5b4c9044dc66adf875c88eba6d71ae5cca0bc6964af
+-- hash: 07ee1dd41dd0abbfe3e384da778f00060164f26d703129ba072c13e0324acf08
 
 name:           reminder
 version:        0.1.0.0
@@ -40,6 +40,7 @@ library
     , blaze-html
     , blaze-markup
     , bytestring
+    , co-log
     , directory
     , hedgehog
     , http-media
@@ -72,6 +73,7 @@ executable reminder-exe
     , blaze-html
     , blaze-markup
     , bytestring
+    , co-log
     , directory
     , hedgehog
     , http-media
@@ -106,6 +108,7 @@ test-suite reminder-test
     , blaze-html
     , blaze-markup
     , bytestring
+    , co-log
     , directory
     , hedgehog
     , http-media
