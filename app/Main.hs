@@ -37,7 +37,7 @@ import           GHC.Generics
 
 -- import           Lucid
 -- import           Network.HTTP.Media            ((//), (/:))
-import           Control.Monad.Reader
+import           Control.Monad.Reader (MonadReader, ReaderT, MonadIO, runReaderT)
 import           Data.Pool
 import           Data.UUID
 import           Database.PostgreSQL.Simple
@@ -48,6 +48,7 @@ import           Servant
 import           System.Environment             ( getEnv )
 import Colog (HasLog (..), LogAction, Message, Msg (..), Severity (..), filterBySeverity, richMessageAction, pattern D, log)
 import GHC.Stack
+import Env
 
 -- TODO split this module
 
@@ -60,38 +61,12 @@ instance ToJSON Remind
 
 type ReminderAPI = "reminds" :> Get '[JSON] [Remind]
 
-type DBPool = Pool Connection
 
-data Env m = Env {
-    envDBPool :: !DBPool
-    , envLogAction :: !(LogAction m Message)
-  }
 type AppEnv = Env App
 
 newtype App a = App
   { unApp :: ReaderT AppEnv IO a
   } deriving (Functor, Applicative, Monad, MonadIO, MonadReader AppEnv)
-
-class Has field env where
-  obtain :: env -> field
-
-instance Has DBPool AppEnv where
-  obtain = envDBPool
-
-instance Has (LogAction m Message) (Env m) where
-  obtain = envLogAction
-
-instance HasLog (Env m) Message m where
-  getLogAction :: Env m -> LogAction m Message
-  getLogAction = envLogAction
-
-  setLogAction :: LogAction m Message -> Env m -> Env m
-  setLogAction logAction env = env {
-    envLogAction = logAction
-  }
-
-grab :: forall field env m . (MonadReader env m, Has field env) => m field
-grab = asks $ obtain @field
 
 type WithPool env m = (Has DBPool env, MonadReader env m, MonadIO m)
 
