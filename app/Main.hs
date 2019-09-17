@@ -1,19 +1,18 @@
-{-# LANGUAGE BlockArguments             #-}
-{-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE DataKinds                  #-}
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE InstanceSigs               #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE PatternSynonyms            #-}
-{-# LANGUAGE PolyKinds                  #-}
-{-# LANGUAGE RankNTypes                 #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE BlockArguments        #-}
+{-# LANGUAGE ConstraintKinds       #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE InstanceSigs          #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE PatternSynonyms       #-}
+{-# LANGUAGE PolyKinds             #-}
+{-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeOperators         #-}
 
 -- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Server where
@@ -34,10 +33,9 @@ import Data.Aeson
 import Data.Time.Calendar
 import GHC.Generics
 
--- import           Lucid
--- import           Network.HTTP.Media            ((//), (/:))
+import App
 import Colog (LogAction, Message, Msg (..), Severity (..), filterBySeverity, richMessageAction)
-import Control.Monad.Reader (MonadIO, MonadReader, ReaderT, runReaderT)
+import Control.Monad.Reader (MonadIO, runReaderT)
 import Data.Pool
 import Data.UUID
 import Database.PostgreSQL.Simple
@@ -60,12 +58,6 @@ data Remind = Remind
 instance ToJSON Remind
 
 type ReminderAPI = "reminds" :> Get '[JSON] [Remind]
-
-type AppEnv = Env App
-
-newtype App a = App
-  { unApp :: ReaderT AppEnv IO a
-  } deriving (Functor, Applicative, Monad, MonadIO, MonadReader AppEnv)
 
 getReminds
   :: (WithPool env m, WithLog env m)
