@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0104e6b2617a57dcde426dcc1d673bf738db8725c5b25191ed0ca72714bfc2a7
+-- hash: 485d70f765fa20d7273c7c26a2e284c2c9217f13ea7faaf37e937c8d19583dba
 
 name:           reminder
 version:        0.1.0.0
@@ -32,6 +32,7 @@ library
       Domain
       Env
       Log
+      Server
   other-modules:
       Paths_reminder
   hs-source-dirs:

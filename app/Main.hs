@@ -15,38 +15,17 @@
 {-# LANGUAGE TypeOperators         #-}
 
 -- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-module Server where
+module Main where
 
--- import           Prelude.Compat
--- import           Control.Monad.Except
--- import           Control.Monad.Reader
-import Control.Monad.IO.Class (liftIO)
-
-import App
-import Colog (LogAction, Message, Msg (..), Severity (..), filterBySeverity, richMessageAction)
-import Control.Monad.Reader (MonadIO, runReaderT)
-import Data.Pool
-import Database.PostgreSQL.Simple
-import Domain
 import Env
-import Network.Wai
-import Network.Wai.Handler.Warp
-import Servant
+import Server
+
+import Colog (LogAction, Message, Msg (..), Severity (..), filterBySeverity, richMessageAction)
+import Control.Monad.Reader (MonadIO)
+import Data.Pool (createPool)
+import Database.PostgreSQL.Simple (ConnectInfo (..), close, connect)
+import Network.Wai.Handler.Warp (run)
 import System.Environment (getEnv)
-
-type ReminderAPI = "reminds" :> Get '[JSON] [Remind]
-
-server :: ServerT ReminderAPI App
-server = getReminds
-
-reminderApi :: Proxy ReminderAPI
-reminderApi = Proxy
-
-nt :: AppEnv -> App a -> Handler a
-nt env app = liftIO $ runReaderT (unApp app) env
-
-app :: AppEnv -> Application
-app env = serve reminderApi $ hoistServer reminderApi (nt env) server
 
 mkDbPool :: ConnectInfo -> IO DBPool
 mkDbPool connectionInfo = do
