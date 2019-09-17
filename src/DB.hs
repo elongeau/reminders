@@ -4,7 +4,9 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module DB where
+module DB (
+  WithPool, selectM, Query, FromRow, fromRow, field
+) where 
 
 import Env
 import Log
@@ -13,7 +15,7 @@ import Control.Monad.Reader (MonadIO, MonadReader, liftIO)
 import Data.Text
 import Data.Pool
 import Database.PostgreSQL.Simple (Connection, Query, query_)
-import           Database.PostgreSQL.Simple.FromRow (FromRow)
+import           Database.PostgreSQL.Simple.FromRow (FromRow, fromRow, field)
 import Colog (pattern D, log)
 
 type WithPool env m = (Has DBPool env, MonadReader env m, MonadIO m)

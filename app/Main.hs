@@ -21,47 +21,20 @@ module Server where
 -- import           Control.Monad.Except
 -- import           Control.Monad.Reader
 import Control.Monad.IO.Class (liftIO)
-import Data.Aeson
-
--- import qualified Data.Aeson.Parser
--- import           Data.Aeson.Types
--- import           Data.Attoparsec.ByteString
--- import           Data.ByteString               (ByteString)
--- import           Data.List
--- import           Data.Maybe
--- import           Data.String.Conversions
-import Data.Time.Calendar
-import GHC.Generics
 
 import App
 import Colog (LogAction, Message, Msg (..), Severity (..), filterBySeverity, richMessageAction)
 import Control.Monad.Reader (MonadIO, runReaderT)
 import Data.Pool
-import Data.UUID
 import Database.PostgreSQL.Simple
-import Database.PostgreSQL.Simple.FromRow (FromRow, field, fromRow)
-import DB
+import Domain
 import Env
-import Log
 import Network.Wai
 import Network.Wai.Handler.Warp
 import Servant
 import System.Environment (getEnv)
 
-data Remind = Remind
-  { id           :: UUID
-  , description  :: String
-  , creationDate :: Day
-  } deriving (Eq, Show, Generic)
-
-instance ToJSON Remind
-
 type ReminderAPI = "reminds" :> Get '[JSON] [Remind]
-
-getReminds
-  :: (WithPool env m, WithLog env m)
-  => m [Remind]
-getReminds = selectM "SELECT * from reminders"
 
 server :: ServerT ReminderAPI App
 server = getReminds
@@ -74,9 +47,6 @@ nt env app = liftIO $ runReaderT (unApp app) env
 
 app :: AppEnv -> Application
 app env = serve reminderApi $ hoistServer reminderApi (nt env) server
-
-instance FromRow Remind where
-  fromRow = Remind <$> field <*> field <*> field
 
 mkDbPool :: ConnectInfo -> IO DBPool
 mkDbPool connectionInfo = do
