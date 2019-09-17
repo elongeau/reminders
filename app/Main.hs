@@ -48,7 +48,6 @@ import Network.Wai.Handler.Warp
 import Servant
 import System.Environment (getEnv)
 
--- TODO split this module
 data Remind = Remind
   { id           :: UUID
   , description  :: String
@@ -80,9 +79,7 @@ instance FromRow Remind where
   fromRow = Remind <$> field <*> field <*> field
 
 mkDbPool :: ConnectInfo -> IO DBPool
-mkDbPool connectionInfo
-         -- TODO use env variable
- = do
+mkDbPool connectionInfo = do
   let create = connect connectionInfo
   createPool create close 1 0.5 1
 
@@ -98,7 +95,6 @@ mainLogAction
   => Severity -> LogAction m Message
 mainLogAction severity = filterBySeverity severity msgSeverity richMessageAction
 
--- TODO add a pre-commit hook for stylish-haskell
 main :: IO ()
 main = do
   connectionInfo <- readConnectionInfo
