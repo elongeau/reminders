@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 485d70f765fa20d7273c7c26a2e284c2c9217f13ea7faaf37e937c8d19583dba
+-- hash: b3363a90e01ef52a21d554c62d447d90e61dd757f0604c78a49722ef28b9936a
 
 name:           reminder
 version:        0.1.0.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       App
+      Config
       DB
       Domain
       Env

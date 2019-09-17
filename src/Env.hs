@@ -18,7 +18,7 @@ module Env where
 
 import Colog (HasLog (..), LogAction, Message)
 import Data.Pool
-import           Control.Monad.Reader (MonadReader, asks)
+import Control.Monad.Reader (MonadReader, asks)
 import Database.PostgreSQL.Simple (Connection)
 
 type DBPool = Pool Connection

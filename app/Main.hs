@@ -17,27 +17,13 @@
 -- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Main where
 
+import Config
 import Env
 import Server
 
 import Colog (LogAction, Message, Msg (..), Severity (..), filterBySeverity, richMessageAction)
 import Control.Monad.Reader (MonadIO)
-import Data.Pool (createPool)
-import Database.PostgreSQL.Simple (ConnectInfo (..), close, connect)
 import Network.Wai.Handler.Warp (run)
-import System.Environment (getEnv)
-
-mkDbPool :: ConnectInfo -> IO DBPool
-mkDbPool connectionInfo = do
-  let create = connect connectionInfo
-  createPool create close 1 0.5 1
-
-readConnectionInfo :: IO ConnectInfo
-readConnectionInfo =
-  ConnectInfo <$> getEnv "DB_HOST" <*> (read <$> getEnv "DB_PORT") <*>
-  getEnv "DB_USER" <*>
-  getEnv "DB_PASSWORD" <*>
-  getEnv "DB_DATABASE"
 
 mainLogAction
   :: MonadIO m
