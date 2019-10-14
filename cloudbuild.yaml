@@ -3,13 +3,13 @@ steps:
     args:
       - --bucket=gs://haskell-deps
       - --key=resources-$( checksum package.yaml )
-  - name: gcr.io/$PROJECT_ID/light-stack
+  - name: gcr.io/$PROJECT_ID/stack
     id: build-bin
     args:
       - --no-terminal
       - build
       - --system-ghc
-  - name: gcr.io/$PROJECT_ID/light-stack
+  - name: gcr.io/$PROJECT_ID/stack
     entrypoint: make
     args:
       - copy-bin
