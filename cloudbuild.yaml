@@ -9,6 +9,7 @@ steps:
       - build
       - --system-ghc
   - name: gcr.io/$PROJECT_ID/stack
+    id: copy-bin
     entrypoint: make
     args:
       - copy-bin
@@ -36,4 +37,6 @@ steps:
       - --key=resources-$( checksum package.yaml )
       - --path=.stack-work
       - --path=/builder/home/.stack
+    waitFor: 
+      - copy-bin
 timeout: 9600s
