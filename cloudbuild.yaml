@@ -4,6 +4,7 @@ steps:
       - --bucket=gs://haskell-deps
       - --key=resources-$( checksum package.yaml )
   - name: gcr.io/$PROJECT_ID/stack
+    id: build-bin
     args:
       - --no-terminal
       - build
@@ -36,4 +37,6 @@ steps:
       - --key=resources-$( checksum package.yaml )
       - --path=.stack-work
       - --path=/builder/home/.stack
+    waitFor: 
+      - build-bin
 timeout: 9600s
