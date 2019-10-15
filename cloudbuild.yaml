@@ -1,5 +1,6 @@
 steps:
   - name: gcr.io/$PROJECT_ID/restore_cache
+    id: restore-cache
     args:
       - --bucket=${_CACHE_BUCKET}
       - --key=${_CACHE_KEY}
@@ -10,16 +11,19 @@ steps:
       - build
       - --system-ghc
   - name: gcr.io/$PROJECT_ID/stack
+    id: copy-bin
     entrypoint: make
     args:
       - copy-bin
   - name: gcr.io/kaniko-project/executor:latest
+    id: build
     args:
       - --destination=gcr.io/$PROJECT_ID/${_APP_NAME}
       - --cache=true
       - --cache-ttl=6h
   # Deploy container image to Cloud Run
   - name: gcr.io/cloud-builders/gcloud
+    id: deploy
     args:
       - beta
       - run
@@ -32,6 +36,7 @@ steps:
       - --platform
       - managed
   - name: gcr.io/$PROJECT_ID/save_cache
+    id: save-cache
     args:
       - --bucket=${_CACHE_BUCKET}
       - --key=${_CACHE_KEY}
