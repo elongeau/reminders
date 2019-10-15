@@ -15,7 +15,7 @@ steps:
       - copy-bin
   - name: gcr.io/kaniko-project/executor:latest
     args:
-      - --destination=gcr.io/$PROJECT_ID/reminder-app
+      - --destination=gcr.io/$PROJECT_ID/${_APP_NAME}
       - --cache=true
       - --cache-ttl=6h
   # Deploy container image to Cloud Run
@@ -24,17 +24,17 @@ steps:
       - beta
       - run
       - deploy
-      - reminder-app
+      - ${_APP_NAME}
       - --image
-      - gcr.io/$PROJECT_ID/reminder-app
+      - gcr.io/$PROJECT_ID/${_APP_NAME}
       - --region
       - europe-west1
       - --platform
       - managed
   - name: gcr.io/$PROJECT_ID/save_cache
     args:
-      - --bucket=gs://haskell-deps
-      - --key=resources-$( checksum package.yaml )
+      - --bucket=${_CACHE_BUCKET}
+      - --key=${_CACHE_KEY}
       - --path=.stack-work
       - --path=/builder/home/.stack
     waitFor: 
@@ -43,3 +43,4 @@ timeout: 9600s
 substitutions:
   _CACHE_BUCKET: gs://haskell-deps
   _CACHE_KEY: resources-$( checksum package.yaml )
+  _APP_NAME: reminder-app
